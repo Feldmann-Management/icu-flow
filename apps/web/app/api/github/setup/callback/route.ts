@@ -1,11 +1,9 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
-import { Octokit } from "octokit"
-
 import { appConfig, db } from "@workspace/db"
+import { anonClient, hasAppCredentials } from "@workspace/github"
 
 import { appUrl } from "@/lib/app-url"
-import { hasAppCredentials } from "@/lib/github"
 
 export const dynamic = "force-dynamic"
 
@@ -41,7 +39,7 @@ export async function GET(request: Request): Promise<Response> {
     return NextResponse.redirect(new URL("/setup?error=bad_state", base))
   }
 
-  const anon = new Octokit()
+  const anon = anonClient()
   const { data } = await anon.request(
     "POST /app-manifests/{code}/conversions",
     { code },

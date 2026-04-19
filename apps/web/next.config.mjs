@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ["@workspace/ui", "@workspace/queue", "@workspace/db"],
+  transpilePackages: ["@workspace/ui", "@workspace/queue", "@workspace/db", "@workspace/github"],
   serverExternalPackages: ["pg-boss", "postgres", "drizzle-orm"],
   output: "standalone",
   outputFileTracingRoot: new URL("../../", import.meta.url).pathname,

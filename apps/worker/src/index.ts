@@ -5,16 +5,19 @@ loadEnv({ path: [".env.local", ".env"] });
 import { createQueue } from "@workspace/queue";
 
 import { translateRepo } from "./handlers/translate-repo";
+import { sweepStaleWorkdirs } from "./lib/workdir";
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
   throw new Error("DATABASE_URL is not set");
 }
 
+await sweepStaleWorkdirs();
+
 const queue = await createQueue({ databaseUrl });
 
-await queue.registerHandler("translate-repo", async (payload) => {
-  await translateRepo(payload);
+await queue.registerHandler("translate-repo", async (payload, job) => {
+  await translateRepo(payload, job.id);
 });
 
 console.log("[worker] started, waiting for jobs");

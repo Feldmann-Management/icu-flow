@@ -163,16 +163,12 @@ async function handlePush(event: PushEventBody): Promise<void> {
   if (!repoRow || !repoRow.active) return
 
   const queue = await getQueue()
-  await queue.enqueue(
-    "translate-repo",
-    {
-      installationId: event.installation.id,
-      repoFullName: event.repository.full_name,
-      sha: event.after,
-      reason: "push",
-    },
-    { singletonKey: `translate-repo:${repoRow.id}`, singletonHours: 1 },
-  )
+  await queue.enqueue("translate-repo", {
+    installationId: event.installation.id,
+    repoFullName: event.repository.full_name,
+    sha: event.after,
+    reason: "push",
+  })
 }
 
 async function upsertReposForInstallation(
