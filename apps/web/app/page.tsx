@@ -1,19 +1,55 @@
-import { Button } from "@workspace/ui/components/button"
+"use client";
+
+import { Trans } from "@lingui/macro";
+
+import { Button } from "@workspace/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
 
 export default function Page() {
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
+    <main className="flex min-h-svh items-center justify-center bg-background p-6">
+      <div className="flex w-full max-w-2xl flex-col gap-8">
+        <div className="flex flex-col gap-3">
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+            <Trans>ICU Flow — automated translations for your app messages</Trans>
+          </h1>
+          <p className="text-muted-foreground">
+            <Trans>
+              Connect a git repository. New source-language messages are translated to every
+              target language via AI and opened as a pull request.
+            </Trans>
+          </p>
+          <div>
+            <Button size="default">
+              <Trans>Get started</Trans>
+            </Button>
+          </div>
         </div>
-        <div className="text-muted-foreground font-mono text-xs">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <Trans>Coming soon</Trans>
+            </CardTitle>
+            <CardDescription>
+              <Trans>Connect a repository and configure target languages.</Trans>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              <Trans>
+                This is a sample landing page. The real onboarding flow lands in a later step.
+              </Trans>
+            </p>
+          </CardContent>
+        </Card>
       </div>
-    </div>
-  )
+    </main>
+  );
 }

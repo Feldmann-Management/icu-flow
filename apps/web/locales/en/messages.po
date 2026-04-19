@@ -1,0 +1,32 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-04-19 13:52+0200\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: en\n"
+
+#: app/page.tsx:38
+msgid "Coming soon"
+msgstr "Coming soon"
+
+#: app/page.tsx:23
+msgid "Connect a git repository. New source-language messages are translated to every target language via AI and opened as a pull request."
+msgstr "Connect a git repository. New source-language messages are translated to every target language via AI and opened as a pull request."
+
+#: app/page.tsx:41
+msgid "Connect a repository and configure target languages."
+msgstr "Connect a repository and configure target languages."
+
+#: app/page.tsx:30
+msgid "Get started"
+msgstr "Get started"
+
+#: app/page.tsx:20
+msgid "ICU Flow — automated translations for your app messages"
+msgstr "ICU Flow — automated translations for your app messages"
+
+#: app/page.tsx:46
+msgid "This is a sample landing page. The real onboarding flow lands in a later step."
+msgstr "This is a sample landing page. The real onboarding flow lands in a later step."
