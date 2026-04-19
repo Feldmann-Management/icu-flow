@@ -8,6 +8,13 @@
       "when": 1776604352193,
       "tag": "0000_big_the_hunter",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1776610940965,
+      "tag": "0001_slippery_gladiator",
+      "breakpoints": true
     }
   ]
 }

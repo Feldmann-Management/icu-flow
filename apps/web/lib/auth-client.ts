@@ -1,7 +1,7 @@
-import { createAuthClient } from "better-auth/react";
+import { createAuthClient } from "better-auth/react"
 
-export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL ?? "http://localhost:3000",
-});
+// No baseURL: defaults to same-origin, which is what we want. The Better-Auth
+// handler is mounted at /api/auth on this app.
+export const authClient = createAuthClient()
 
-export const { signIn, signUp, signOut, useSession, getSession } = authClient;
+export const { signIn, signUp, signOut, useSession, getSession } = authClient

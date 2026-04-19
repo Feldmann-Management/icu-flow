@@ -5,6 +5,7 @@ import * as schema from "./schema/index";
 
 export * from "./schema/index";
 export { schema };
+export { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 
 export type Database = ReturnType<typeof createClient>;
 
