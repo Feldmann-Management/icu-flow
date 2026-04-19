@@ -1,8 +1,9 @@
 "use client";
 
 import { Trans } from "@lingui/macro";
+import Link from "next/link";
 
-import { Button } from "@workspace/ui/components/button";
+import { buttonVariants } from "@workspace/ui/components/button";
 import {
   Card,
   CardContent,
@@ -25,10 +26,13 @@ export default function Page() {
               target language via AI and opened as a pull request.
             </Trans>
           </p>
-          <div>
-            <Button size="default">
+          <div className="flex items-center gap-3">
+            <Link href="/signup" className={buttonVariants()}>
               <Trans>Get started</Trans>
-            </Button>
+            </Link>
+            <Link href="/signin" className={buttonVariants({ variant: "ghost" })}>
+              <Trans>Sign in</Trans>
+            </Link>
           </div>
         </div>
 
