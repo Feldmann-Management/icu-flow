@@ -1,5 +1,23 @@
-import { toNextJsHandler } from "better-auth/next-js";
+import { toNextJsHandler } from "better-auth/next-js"
+import { NextResponse } from "next/server"
 
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth"
+import { hasAnyUser } from "@/lib/users"
 
-export const { GET, POST } = toNextJsHandler(auth);
+const handler = toNextJsHandler(auth)
+
+export const GET = handler.GET
+
+export async function POST(request: Request): Promise<Response> {
+  // Reject sign-up endpoints once a user exists. This is the server-level
+  // block — removing the /signup page is not enough; someone could POST
+  // directly.
+  const url = new URL(request.url)
+  if (url.pathname.includes("/sign-up") && (await hasAnyUser())) {
+    return NextResponse.json(
+      { error: "Sign-ups are closed on this instance." },
+      { status: 403 },
+    )
+  }
+  return handler.POST(request)
+}

@@ -56,5 +56,5 @@ export async function GET(request: Request): Promise<Response> {
     githubAppPrivateKey: conversion.pem,
   })
 
-  return NextResponse.redirect(new URL("/signup?setup=done", base))
+  return NextResponse.redirect(new URL("/dashboard?setup=done", base))
 }

@@ -5,10 +5,9 @@
     "DATABASE_URL",
     "APP_URL",
     "BETTER_AUTH_SECRET",
-    "GITHUB_CLIENT_ID",
-    "GITHUB_CLIENT_SECRET",
     "OPENAI_API_KEY",
-    "NODE_ENV"
+    "NODE_ENV",
+    "NEXT_RUNTIME"
   ],
   "tasks": {
     "build": {

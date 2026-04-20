@@ -2,7 +2,6 @@
 
 import { useForm } from "@tanstack/react-form"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
 import { useState } from "react"
 import { z } from "zod"
 
@@ -19,7 +18,6 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
-  FieldSeparator,
 } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
 
@@ -136,31 +134,8 @@ export default function SignInPage() {
                 )}
               </form.Subscribe>
             </Field>
-            <FieldSeparator>or</FieldSeparator>
-            <Field>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() =>
-                  signIn.social({
-                    provider: "github",
-                    callbackURL: "/dashboard",
-                  })
-                }
-              >
-                Continue with GitHub
-              </Button>
-            </Field>
           </FieldGroup>
         </form>
-
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-foreground underline">
-            Sign up
-          </Link>
-        </p>
       </CardContent>
     </Card>
   )

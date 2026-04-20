@@ -8,13 +8,33 @@ import { hasAppCredentials } from "@/lib/github"
 export const dynamic = "force-dynamic"
 
 const STATE_COOKIE = "icu_flow_setup_state"
+const OWNER_RE = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,38}[a-zA-Z0-9])?$/
 
+export async function POST(request: Request): Promise<Response> {
+  const formData = await request.formData()
+  const owner = formData.get("owner")?.toString().trim() ?? ""
+  return handle(owner)
+}
+
+// Preserve the old no-owner GET path (e.g. links in docs).
 export async function GET(): Promise<Response> {
+  return handle("")
+}
+
+async function handle(owner: string): Promise<Response> {
+  const base = appUrl()
+
   if (await hasAppCredentials()) {
-    return Response.redirect(new URL("/dashboard", appUrl()), 302)
+    return Response.redirect(new URL("/dashboard", base), 302)
   }
 
-  const base = appUrl()
+  if (owner && !OWNER_RE.test(owner)) {
+    return Response.redirect(
+      new URL("/setup?error=invalid_owner", base),
+      302,
+    )
+  }
+
   const state = crypto.randomBytes(16).toString("hex")
 
   const jar = await cookies()
@@ -46,7 +66,9 @@ export async function GET(): Promise<Response> {
   }
 
   const manifestJson = JSON.stringify(manifest)
-  const createUrl = `https://github.com/settings/apps/new?state=${state}`
+  const createUrl = owner
+    ? `https://github.com/organizations/${encodeURIComponent(owner)}/settings/apps/new?state=${state}`
+    : `https://github.com/settings/apps/new?state=${state}`
 
   const html = `<!doctype html>
 <html>

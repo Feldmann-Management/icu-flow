@@ -49,6 +49,33 @@ messages:
 
 `{locale}` is substituted with the source locale and each target. The `messages` list supports monorepos with multiple catalogs.
 
+## What ICU Flow does (and doesn't)
+
+ICU Flow's one job: given **source `.po` files in your repo**, keep the target locale `.po` files translated with AI.
+
+It does **not** run extraction (`lingui extract`, `i18next-parser`, `formatjs extract`, `xgettext`…). That's your app's job.
+
+### Why
+
+Extraction is framework-specific and build-toolchain-coupled — Lingui uses SWC, formatjs uses Babel, i18next-parser has its own config. Running it server-side would mean ICU Flow has to know every i18n framework's toolchain, install your dev deps, and execute arbitrary build code. The separation keeps ICU Flow single-purpose and your extract diff reviewable in normal dev flow.
+
+### Where to run extraction
+
+If `lingui extract` (or your framework's equivalent) isn't run before pushing, the source `.po` is stale and ICU Flow has nothing new to translate. Pick one of the three:
+
+1. **Pre-commit hook** (husky, lefthook). Most reliable — you can't commit stale catalogs.
+   ```yaml
+   # lefthook.yml
+   pre-commit:
+     commands:
+       lingui:
+         run: pnpm lingui:extract && git add '**/messages.po'
+   ```
+2. **CI check on every PR**. Run `lingui extract`, fail if the working tree differs from what's committed. Forces devs to run it locally before pushing.
+3. **Pre-push hook**. Same idea as pre-commit, just one stage later.
+
+Whichever you pick, the `.po` files are committed and pushed → ICU Flow sees fresh msgids → opens the translation PR.
+
 ## Architecture
 
 Turborepo, pnpm workspaces, TypeScript throughout.
@@ -67,7 +94,7 @@ packages/
   eslint-config/, typescript-config/
 ```
 
-Stack: Next.js 16, React 19, Tailwind v4, shadcn + Base UI, Better-Auth (email+password, optional GitHub OAuth), Drizzle ORM, Postgres 16, pg-boss, TanStack Query + Form, Zod, Lingui, Vitest.
+Stack: Next.js 16, React 19, Tailwind v4, shadcn + Base UI, Better-Auth (email+password, single-admin), Drizzle ORM, Postgres 16, pg-boss, TanStack Query + Form, Zod, Lingui, Vitest.
 
 ## Setup
 
@@ -98,10 +125,6 @@ Copy `.env.example` → `apps/web/.env.local` and `apps/worker/.env.local`. Fill
 DATABASE_URL=postgres://icuflow:icuflow@localhost:55432/icuflow
 APP_URL=https://your-public-url.example.com      # must be HTTPS and reachable from GitHub
 BETTER_AUTH_SECRET=<openssl rand -base64 32>
-
-# Optional: sign-in with GitHub via Better-Auth (separate from the GitHub App)
-GITHUB_CLIENT_ID=
-GITHUB_CLIENT_SECRET=
 ```
 
 ```bash
@@ -120,15 +143,14 @@ pnpm --filter worker dev
 
 Web serves at `http://localhost:3000`. In production, `pnpm --filter web build && pnpm --filter web start` + running the worker via its `start` script.
 
-### 4. First-run setup wizard
+### 4. First-run flow
 
-Visit `APP_URL` in your browser. You'll be redirected to `/setup`. Click **Create GitHub App** — this POSTs an app manifest to GitHub, which walks you through a one-click confirmation, then redirects back with the App's credentials (ID, client secret, private key, webhook secret). ICU Flow stores them in the `app_config` table. No manual form, no pasting secrets into env files.
+Visit `APP_URL` in your browser. The instance is single-admin:
 
-### 5. Connect a repo
-
-Sign up for an account, then on the dashboard click **Connect GitHub**. GitHub prompts you to pick which repos the App can access. After install, you land back on the dashboard with the installation and its repos listed.
-
-Add `icu-flow.yml` to a repo, push to `main`, watch the PR open.
+1. **First visit → `/signup`**. Create the admin account (email + password). This is the only signup allowed on this instance — once a user exists, the signup endpoint is blocked at the server level, and `/signup` redirects to `/signin`.
+2. **`/setup`** automatically. Click **Create GitHub App** — this POSTs an app manifest to GitHub, which walks you through a one-click confirmation and redirects back with the App's credentials (ID, client secret, private key, webhook secret). ICU Flow stores them in the `app_config` table. No manual form, no pasting secrets into env files.
+3. **Back on `/dashboard`** → click **Connect GitHub**. GitHub prompts you to pick which repos the App can access. After install, the installation and its repos are listed on the dashboard.
+4. Add `icu-flow.yml` to a connected repo, push to `main`, watch the PR open.
 
 ## Development
 
