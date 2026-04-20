@@ -1,0 +1,4 @@
+source: en
+targets: [de]
+messages:
+  - apps/web/locales/{locale}/messages.po
