@@ -17,7 +17,9 @@ export async function removeWorkdir(dir: string): Promise<void> {
 }
 
 /** Remove directories older than `maxAgeMs` in WORK_DIR. */
-export async function sweepStaleWorkdirs(maxAgeMs: number = 2 * 60 * 60 * 1000): Promise<void> {
+export async function sweepStaleWorkdirs(
+  maxAgeMs: number = 2 * 60 * 60 * 1000,
+): Promise<void> {
   const base = baseDir()
   let entries: string[]
   try {

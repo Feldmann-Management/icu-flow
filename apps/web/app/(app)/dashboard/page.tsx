@@ -1,10 +1,9 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
-import { db, eq, inArray, installation, repo } from "@workspace/db"
-
 import { auth } from "@/lib/auth"
-import { getInstanceSettings } from "@/lib/settings"
+import * as installationsService from "@/domains/installations/installations.service"
+import * as settingsService from "@/domains/settings/settings.service"
 
 import { ConnectGitHubButton } from "./connect-github-button"
 import { SettingsForm } from "./settings-form"
@@ -15,28 +14,10 @@ export default async function DashboardPage() {
   if (!session) redirect("/signin")
   const user = session.user
 
-  const installations = await db
-    .select()
-    .from(installation)
-    .where(eq(installation.connectedByUserId, user.id))
-    .orderBy(installation.createdAt)
-
-  const installationIds = installations.map((row) => row.id)
-  const repos = installationIds.length
-    ? await db.select().from(repo).where(inArray(repo.installationId, installationIds))
-    : []
-
-  const reposByInstallation = new Map<string, typeof repos>()
-  for (const r of repos) {
-    const list = reposByInstallation.get(r.installationId) ?? []
-    list.push(r)
-    reposByInstallation.set(r.installationId, list)
-  }
-
-  const settings = await getInstanceSettings()
-  const keyLastFour = settings.openaiApiKey
-    ? settings.openaiApiKey.slice(-4)
-    : null
+  const [installations, settings] = await Promise.all([
+    installationsService.listForUser(user.id),
+    settingsService.get(),
+  ])
 
   return (
     <main className="flex min-h-svh items-start justify-center bg-background p-6">
@@ -53,7 +34,7 @@ export default async function DashboardPage() {
 
         <SettingsForm
           initial={{
-            openaiApiKeyLastFour: keyLastFour,
+            openaiApiKey: settings.openaiApiKey,
             openaiModel: settings.openaiModel,
           }}
         />
@@ -73,36 +54,33 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <ul className="flex flex-col gap-3">
-              {installations.map((inst) => {
-                const instRepos = reposByInstallation.get(inst.id) ?? []
-                return (
-                  <li
-                    key={inst.id}
-                    className="rounded-lg border p-4 flex flex-col gap-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{inst.accountLogin}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {inst.accountType} · installation #
-                          {inst.githubInstallationId}
-                          {inst.suspendedAt ? " · suspended" : ""}
-                        </p>
-                      </div>
+              {installations.map((inst) => (
+                <li
+                  key={inst.id}
+                  className="rounded-lg border p-4 flex flex-col gap-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{inst.accountLogin}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {inst.accountType} · installation #
+                        {inst.githubInstallationId}
+                        {inst.suspendedAt ? " · suspended" : ""}
+                      </p>
                     </div>
-                    {instRepos.length > 0 && (
-                      <ul className="mt-2 flex flex-col gap-1 text-sm">
-                        {instRepos.map((r) => (
-                          <li key={r.id} className="text-muted-foreground">
-                            {r.owner}/{r.name}
-                            <span className="text-xs"> · {r.defaultBranch}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                )
-              })}
+                  </div>
+                  {inst.repos.length > 0 && (
+                    <ul className="mt-2 flex flex-col gap-1 text-sm">
+                      {inst.repos.map((r) => (
+                        <li key={r.id} className="text-muted-foreground">
+                          {r.owner}/{r.name}
+                          <span className="text-xs"> · {r.defaultBranch}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
             </ul>
           )}
         </section>

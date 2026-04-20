@@ -1,7 +1,9 @@
 "use client"
 
 import { useForm } from "@tanstack/react-form"
+import { Loader2Icon } from "lucide-react"
 import { useState } from "react"
+import { toast } from "sonner"
 import { z } from "zod"
 
 import { Button } from "@workspace/ui/components/button"
@@ -19,7 +21,12 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@workspace/ui/components/field"
-import { Input } from "@workspace/ui/components/input"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@workspace/ui/components/input-group"
 import {
   Select,
   SelectContent,
@@ -37,37 +44,38 @@ const schema = z.object({
 
 export interface SettingsFormProps {
   initial: {
-    openaiApiKeyLastFour: string | null
+    openaiApiKey: string
     openaiModel: (typeof MODELS)[number]
   }
 }
 
+type TestState =
+  | { status: "idle" | "running" }
+  | { status: "ok"; message: string }
+  | { status: "error"; message: string }
+
 export function SettingsForm({ initial }: SettingsFormProps) {
-  const [testState, setTestState] = useState<
-    { status: "idle" | "running" | "ok" | "error"; message?: string }
-  >({ status: "idle" })
-  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">(
-    "idle",
-  )
+  const [testState, setTestState] = useState<TestState>({ status: "idle" })
+  const [showKey, setShowKey] = useState(false)
 
   const form = useForm({
     defaultValues: {
-      openaiApiKey: "",
+      openaiApiKey: initial.openaiApiKey,
       openaiModel: initial.openaiModel,
     },
     validators: { onSubmit: schema },
     onSubmit: async ({ value }) => {
-      setSaveState("saving")
       const result = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          openaiApiKey: value.openaiApiKey,
-          openaiModel: value.openaiModel,
-        }),
+        body: JSON.stringify(value),
       })
-      setSaveState(result.ok ? "saved" : "error")
-      if (result.ok) form.reset({ ...form.state.values, openaiApiKey: "" })
+      if (result.ok) {
+        toast.success("Settings saved")
+        form.reset(value)
+      } else {
+        toast.error("Save failed — check the server log.")
+      }
     },
   })
 
@@ -98,55 +106,85 @@ export function SettingsForm({ initial }: SettingsFormProps) {
         <form
           onSubmit={(e) => {
             e.preventDefault()
-            setSaveState("idle")
             setTestState({ status: "idle" })
             void form.handleSubmit()
           }}
         >
           <FieldGroup>
             <form.Field name="openaiApiKey">
-              {(field) => (
-                <Field>
-                  <FieldLabel htmlFor={field.name}>OpenAI API key</FieldLabel>
-                  <div className="flex gap-2">
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type="password"
-                      autoComplete="off"
-                      placeholder={
-                        initial.openaiApiKeyLastFour
-                          ? `•••• •••• •••• ${initial.openaiApiKeyLastFour} (leave blank to keep)`
-                          : "sk-..."
-                      }
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={testState.status === "running"}
-                      onClick={() => handleTest(field.state.value)}
-                    >
-                      {testState.status === "running" ? "Testing…" : "Test"}
-                    </Button>
-                  </div>
-                  <FieldDescription>
+              {(field) => {
+                const fieldErrors = field.state.meta.errors
+                const keyInvalid =
+                  fieldErrors.length > 0 || testState.status === "error"
+                return (
+                  <Field data-invalid={keyInvalid || undefined}>
+                    <FieldLabel htmlFor={field.name}>OpenAI API key</FieldLabel>
+                    <div className="flex gap-2">
+                      <InputGroup>
+                        <InputGroupInput
+                          id={field.name}
+                          name={field.name}
+                          type={showKey ? "text" : "password"}
+                          autoComplete="off"
+                          spellCheck={false}
+                          placeholder="sk-..."
+                          aria-invalid={keyInvalid || undefined}
+                          value={field.state.value}
+                          onChange={(e) => {
+                            field.handleChange(e.target.value)
+                            if (testState.status !== "idle") {
+                              setTestState({ status: "idle" })
+                            }
+                          }}
+                          onBlur={field.handleBlur}
+                        />
+                        <InputGroupAddon align="inline-end">
+                          <InputGroupButton
+                            onClick={() => setShowKey((v) => !v)}
+                            aria-label={showKey ? "Hide key" : "Show key"}
+                          >
+                            {showKey ? "Hide" : "Show"}
+                          </InputGroupButton>
+                        </InputGroupAddon>
+                      </InputGroup>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={
+                          testState.status === "running" ||
+                          field.state.value.trim().length === 0
+                        }
+                        onClick={() => handleTest(field.state.value)}
+                      >
+                        {testState.status === "running" ? "Testing…" : "Test"}
+                      </Button>
+                    </div>
                     {testState.status === "ok" && (
-                      <span className="text-emerald-600 dark:text-emerald-400">
+                      <FieldDescription className="text-emerald-600 dark:text-emerald-400">
                         {testState.message}
-                      </span>
+                      </FieldDescription>
+                    )}
+                    {testState.status === "running" && (
+                      <FieldDescription>Contacting OpenAI…</FieldDescription>
+                    )}
+                    {testState.status === "idle" && fieldErrors.length === 0 && (
+                      <FieldDescription>
+                        The worker uses this key to translate catalogs.
+                      </FieldDescription>
                     )}
                     {testState.status === "error" && (
-                      <span className="text-destructive">{testState.message}</span>
+                      <FieldError>{testState.message}</FieldError>
                     )}
-                    {testState.status === "idle" &&
-                      "The worker uses this key to translate catalogs."}
-                    {testState.status === "running" && "Contacting OpenAI…"}
-                  </FieldDescription>
-                </Field>
-              )}
+                    {fieldErrors.length > 0 && (
+                      <FieldError
+                        errors={fieldErrors.map((e) => ({
+                          message: typeof e === "string" ? e : e?.message,
+                        }))}
+                      />
+                    )}
+                  </Field>
+                )
+              }}
             </form.Field>
 
             <form.Field name="openaiModel">
@@ -155,7 +193,9 @@ export function SettingsForm({ initial }: SettingsFormProps) {
                   <FieldLabel htmlFor={field.name}>Model</FieldLabel>
                   <Select
                     value={field.state.value}
-                    onValueChange={(v) => field.handleChange(v as (typeof MODELS)[number])}
+                    onValueChange={(v) =>
+                      field.handleChange(v as (typeof MODELS)[number])
+                    }
                   >
                     <SelectTrigger id={field.name}>
                       <SelectValue />
@@ -169,18 +209,12 @@ export function SettingsForm({ initial }: SettingsFormProps) {
                     </SelectContent>
                   </Select>
                   <FieldDescription>
-                    <code>gpt-4o-mini</code> is cheapest; <code>gpt-4o</code> and{" "}
-                    <code>gpt-4.1</code> give better prose quality.
+                    <code>gpt-4o-mini</code> is cheapest; <code>gpt-4o</code>{" "}
+                    and <code>gpt-4.1</code> give better prose quality.
                   </FieldDescription>
                 </Field>
               )}
             </form.Field>
-
-            {saveState === "error" && (
-              <Field data-invalid>
-                <FieldError>Save failed — check the server log.</FieldError>
-              </Field>
-            )}
 
             <Field>
               <form.Subscribe
@@ -192,11 +226,8 @@ export function SettingsForm({ initial }: SettingsFormProps) {
                     disabled={!canSubmit || isSubmitting}
                     className="w-full"
                   >
-                    {isSubmitting
-                      ? "Saving…"
-                      : saveState === "saved"
-                        ? "Saved ✓"
-                        : "Save"}
+                    {isSubmitting && <Loader2Icon className="animate-spin" />}
+                    {isSubmitting ? "Saving…" : "Save"}
                   </Button>
                 )}
               </form.Subscribe>

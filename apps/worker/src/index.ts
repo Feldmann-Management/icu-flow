@@ -4,8 +4,8 @@ loadEnv({ path: [".env.local", ".env"] });
 
 import { createQueue } from "@workspace/queue";
 
+import { sweepStaleWorkdirs } from "./domains/translation/workdir.service";
 import { translateRepo } from "./handlers/translate-repo";
-import { sweepStaleWorkdirs } from "./lib/workdir";
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {

@@ -1,6 +1,6 @@
 import { installationClient } from "@workspace/github"
 
-import { TRANSLATION_BRANCH } from "./git"
+import { TRANSLATION_BRANCH } from "./git.service"
 
 export interface OpenOrUpdatePrParams {
   installationId: number

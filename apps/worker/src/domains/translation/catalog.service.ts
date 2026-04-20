@@ -5,12 +5,6 @@ import { po, type GetTextTranslations } from "gettext-parser"
 
 export type Catalog = GetTextTranslations
 
-export interface PoEntry {
-  msgid: string
-  msgctxt?: string
-  msgstr: string
-}
-
 export async function readCatalog(filePath: string): Promise<Catalog | null> {
   try {
     const buf = await fs.readFile(filePath)
@@ -23,25 +17,13 @@ export async function readCatalog(filePath: string): Promise<Catalog | null> {
   }
 }
 
-export async function writeCatalog(filePath: string, catalog: Catalog): Promise<void> {
+export async function writeCatalog(
+  filePath: string,
+  catalog: Catalog,
+): Promise<void> {
   await fs.mkdir(path.dirname(filePath), { recursive: true })
   const out = po.compile(catalog)
   await fs.writeFile(filePath, out)
-}
-
-/**
- * Iterate all translatable entries (excluding the empty header entry).
- * Emits (context, msgid, entry) so callers can find missing strings.
- */
-export function* entries(
-  catalog: Catalog,
-): Generator<{ context: string; msgid: string; msgstr: string[] }> {
-  for (const [context, group] of Object.entries(catalog.translations)) {
-    for (const [msgid, entry] of Object.entries(group)) {
-      if (context === "" && msgid === "") continue // header
-      yield { context, msgid, msgstr: entry.msgstr }
-    }
-  }
 }
 
 /**
@@ -53,7 +35,10 @@ export function buildTargetFromSource(
   source: Catalog,
   existing: Catalog | null,
   targetLocale: string,
-): { catalog: Catalog; missing: { context: string; msgid: string; source: string }[] } {
+): {
+  catalog: Catalog
+  missing: { context: string; msgid: string; source: string }[]
+} {
   const catalog: Catalog = {
     charset: source.charset ?? "utf-8",
     headers: {
@@ -88,7 +73,6 @@ export function buildTargetFromSource(
   return { catalog, missing }
 }
 
-/** Fill in translations for the given (context, msgid) pairs. */
 export function applyTranslations(
   catalog: Catalog,
   translations: { context: string; msgid: string; translation: string }[],

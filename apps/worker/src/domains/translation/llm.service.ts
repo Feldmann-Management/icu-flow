@@ -1,5 +1,11 @@
-import { db, instanceSettings } from "@workspace/db"
 import OpenAI from "openai"
+
+import * as settingsRepo from "../settings/settings.repository"
+
+export interface LlmConfig {
+  apiKey: string
+  model: string
+}
 
 export interface TranslateBatchInput {
   sourceLocale: string
@@ -15,9 +21,8 @@ export interface TranslatedEntry {
 const DEFAULT_MODEL = "gpt-4o-mini"
 const MAX_KEYS_PER_REQUEST = 50
 
-async function resolveConfig(): Promise<{ apiKey: string; model: string }> {
-  const rows = await db.select().from(instanceSettings).limit(1)
-  const row = rows[0]
+export async function resolveLlmConfig(): Promise<LlmConfig> {
+  const row = await settingsRepo.findOne()
   const apiKey = row?.openaiApiKey ?? process.env.OPENAI_API_KEY ?? ""
   const model = row?.openaiModel ?? DEFAULT_MODEL
   if (!apiKey) {
@@ -29,12 +34,12 @@ async function resolveConfig(): Promise<{ apiKey: string; model: string }> {
 }
 
 export async function translateBatch(
+  config: LlmConfig,
   input: TranslateBatchInput,
 ): Promise<TranslatedEntry[]> {
   if (input.entries.length === 0) return []
 
-  const { apiKey, model } = await resolveConfig()
-  const client = new OpenAI({ apiKey })
+  const client = new OpenAI({ apiKey: config.apiKey })
   const results: TranslatedEntry[] = []
 
   for (let i = 0; i < input.entries.length; i += MAX_KEYS_PER_REQUEST) {
@@ -42,7 +47,7 @@ export async function translateBatch(
     const payload = Object.fromEntries(slice.map((e) => [e.key, e.source]))
 
     const response = await client.chat.completions.create({
-      model,
+      model: config.model,
       response_format: { type: "json_object" },
       messages: [
         {

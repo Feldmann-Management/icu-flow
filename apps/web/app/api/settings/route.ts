@@ -3,11 +3,10 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { auth } from "@/lib/auth"
-import { OPENAI_MODELS, upsertInstanceSettings } from "@/lib/settings"
+import { OPENAI_MODELS, upsert } from "@/domains/settings/settings.service"
 
 const bodySchema = z.object({
-  // Empty string means "keep existing" (form didn't enter a new key).
-  openaiApiKey: z.string().optional(),
+  openaiApiKey: z.string(),
   openaiModel: z.enum(OPENAI_MODELS),
 })
 
@@ -32,10 +31,6 @@ export async function POST(request: Request): Promise<Response> {
     )
   }
 
-  const key = parsed.data.openaiApiKey?.trim()
-  await upsertInstanceSettings({
-    ...(key ? { openaiApiKey: key } : {}),
-    openaiModel: parsed.data.openaiModel,
-  })
+  await upsert(parsed.data)
   return NextResponse.json({ ok: true })
 }

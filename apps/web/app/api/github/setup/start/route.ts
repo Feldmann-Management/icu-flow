@@ -1,18 +1,19 @@
-import crypto from "node:crypto"
-
 import { cookies } from "next/headers"
 
 import { appUrl } from "@/lib/app-url"
-import { hasAppCredentials } from "@/lib/github"
+import {
+  buildManifestForm,
+  hasCredentials,
+  InvalidOwnerError,
+} from "@/domains/app-config/app-config.service"
 
 export const dynamic = "force-dynamic"
 
 const STATE_COOKIE = "icu_flow_setup_state"
-const OWNER_RE = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,38}[a-zA-Z0-9])?$/
 
 export async function POST(request: Request): Promise<Response> {
   const formData = await request.formData()
-  const owner = formData.get("owner")?.toString().trim() ?? ""
+  const owner = formData.get("owner")?.toString() ?? ""
   return handle(owner)
 }
 
@@ -24,51 +25,31 @@ export async function GET(): Promise<Response> {
 async function handle(owner: string): Promise<Response> {
   const base = appUrl()
 
-  if (await hasAppCredentials()) {
+  if (await hasCredentials()) {
     return Response.redirect(new URL("/dashboard", base), 302)
   }
 
-  if (owner && !OWNER_RE.test(owner)) {
-    return Response.redirect(
-      new URL("/setup?error=invalid_owner", base),
-      302,
-    )
+  let form
+  try {
+    form = buildManifestForm(owner)
+  } catch (err) {
+    if (err instanceof InvalidOwnerError) {
+      return Response.redirect(
+        new URL("/setup?error=invalid_owner", base),
+        302,
+      )
+    }
+    throw err
   }
 
-  const state = crypto.randomBytes(16).toString("hex")
-
   const jar = await cookies()
-  jar.set(STATE_COOKIE, state, {
+  jar.set(STATE_COOKIE, form.state, {
     httpOnly: true,
     sameSite: "lax",
     secure: base.startsWith("https://"),
     maxAge: 10 * 60,
     path: "/",
   })
-
-  const manifest = {
-    name: "ICU Flow",
-    url: base,
-    hook_attributes: {
-      url: `${base}/api/webhooks/github`,
-    },
-    redirect_url: `${base}/api/github/setup/callback`,
-    callback_urls: [`${base}/api/github/install/callback`],
-    setup_url: `${base}/api/github/install/callback`,
-    setup_on_update: true,
-    public: false,
-    default_permissions: {
-      contents: "write",
-      pull_requests: "write",
-      metadata: "read",
-    },
-    default_events: ["push"],
-  }
-
-  const manifestJson = JSON.stringify(manifest)
-  const createUrl = owner
-    ? `https://github.com/organizations/${encodeURIComponent(owner)}/settings/apps/new?state=${state}`
-    : `https://github.com/settings/apps/new?state=${state}`
 
   const html = `<!doctype html>
 <html>
@@ -78,8 +59,8 @@ async function handle(owner: string): Promise<Response> {
   </head>
   <body>
     <p>Redirecting to GitHub…</p>
-    <form id="f" method="POST" action="${createUrl}">
-      <input type="hidden" name="manifest" value='${escapeAttr(manifestJson)}' />
+    <form id="f" method="POST" action="${form.createUrl}">
+      <input type="hidden" name="manifest" value='${escapeAttr(form.manifestJson)}' />
       <noscript>
         <button type="submit">Continue to GitHub</button>
       </noscript>

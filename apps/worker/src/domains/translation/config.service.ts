@@ -34,10 +34,6 @@ export async function readConfig(repoDir: string): Promise<IcuFlowConfig> {
   return configSchema.parse(parsed)
 }
 
-/**
- * Resolve a messages template like "apps/web/locales/{locale}/messages.po"
- * for the given locale.
- */
 export function resolveLocalePath(template: string, locale: string): string {
   return template.replace(/\{locale\}/g, locale)
 }

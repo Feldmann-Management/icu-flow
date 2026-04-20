@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 
-import { hasAppCredentials } from "@/lib/github"
-import { hasAnyUser } from "@/lib/users"
+import { hasAnyUser } from "@/domains/auth/auth.service"
+import { hasCredentials } from "@/domains/app-config/app-config.service"
 
 export const config = {
   // Gate all pages. API routes enforce their own checks.
@@ -13,7 +13,7 @@ export const runtime = "nodejs"
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl
   const anyUser = await hasAnyUser()
-  const hasApp = await hasAppCredentials()
+  const hasApp = await hasCredentials()
 
   // /setup: only reachable when users exist but no App configured.
   if (pathname === "/setup") {

@@ -1,11 +1,9 @@
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
-import { db, installation, repo, sql } from "@workspace/db"
-
 import { appUrl } from "@/lib/app-url"
 import { auth } from "@/lib/auth"
-import { fetchInstallation, fetchInstallationRepos } from "@/lib/github"
+import { syncFromGitHub } from "@/domains/installations/installations.service"
 
 export async function GET(request: Request): Promise<Response> {
   const base = appUrl()
@@ -32,61 +30,6 @@ export async function GET(request: Request): Promise<Response> {
     )
   }
 
-  const metadata = await fetchInstallation(installationId)
-  const repos = await fetchInstallationRepos(installationId)
-
-  await db.transaction(async (tx) => {
-    const [inserted] = await tx
-      .insert(installation)
-      .values({
-        githubInstallationId: metadata.id,
-        accountType: metadata.accountType,
-        accountLogin: metadata.accountLogin,
-        accountId: metadata.accountId,
-        connectedByUserId: session.user.id,
-        suspendedAt: metadata.suspendedAt ? new Date(metadata.suspendedAt) : null,
-      })
-      .onConflictDoUpdate({
-        target: installation.githubInstallationId,
-        set: {
-          accountType: metadata.accountType,
-          accountLogin: metadata.accountLogin,
-          accountId: metadata.accountId,
-          connectedByUserId: session.user.id,
-          suspendedAt: metadata.suspendedAt ? new Date(metadata.suspendedAt) : null,
-          updatedAt: new Date(),
-        },
-      })
-      .returning()
-
-    if (!inserted) {
-      throw new Error("Failed to upsert installation")
-    }
-
-    if (repos.length > 0) {
-      await tx
-        .insert(repo)
-        .values(
-          repos.map((r) => ({
-            installationId: inserted.id,
-            githubRepoId: r.githubRepoId,
-            owner: r.owner,
-            name: r.name,
-            defaultBranch: r.defaultBranch,
-          })),
-        )
-        .onConflictDoUpdate({
-          target: repo.githubRepoId,
-          set: {
-            installationId: inserted.id,
-            owner: sql`excluded.owner`,
-            name: sql`excluded.name`,
-            defaultBranch: sql`excluded.default_branch`,
-            updatedAt: new Date(),
-          },
-        })
-    }
-  })
-
+  await syncFromGitHub(installationId, session.user.id)
   return NextResponse.redirect(new URL("/dashboard?connected=1", base))
 }
