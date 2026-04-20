@@ -4,8 +4,10 @@ import { redirect } from "next/navigation"
 import { db, eq, inArray, installation, repo } from "@workspace/db"
 
 import { auth } from "@/lib/auth"
+import { getInstanceSettings } from "@/lib/settings"
 
 import { ConnectGitHubButton } from "./connect-github-button"
+import { SettingsForm } from "./settings-form"
 import { SignOutButton } from "./sign-out-button"
 
 export default async function DashboardPage() {
@@ -31,6 +33,11 @@ export default async function DashboardPage() {
     reposByInstallation.set(r.installationId, list)
   }
 
+  const settings = await getInstanceSettings()
+  const keyLastFour = settings.openaiApiKey
+    ? settings.openaiApiKey.slice(-4)
+    : null
+
   return (
     <main className="flex min-h-svh items-start justify-center bg-background p-6">
       <div className="flex w-full max-w-2xl flex-col gap-6 pt-16">
@@ -43,6 +50,13 @@ export default async function DashboardPage() {
           </div>
           <SignOutButton />
         </div>
+
+        <SettingsForm
+          initial={{
+            openaiApiKeyLastFour: keyLastFour,
+            openaiModel: settings.openaiModel,
+          }}
+        />
 
         <section className="flex flex-col gap-4">
           <div className="flex items-center justify-between">

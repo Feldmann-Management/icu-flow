@@ -4,13 +4,6 @@ import { Trans } from "@lingui/macro";
 import Link from "next/link";
 
 import { buttonVariants } from "@workspace/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card";
 
 export default function Page() {
   return (
@@ -35,24 +28,6 @@ export default function Page() {
             </Link>
           </div>
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <Trans>Coming soon</Trans>
-            </CardTitle>
-            <CardDescription>
-              <Trans>Connect a repository and configure target languages.</Trans>
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              <Trans>
-                This is a sample landing page. The real onboarding flow lands in a later step.
-              </Trans>
-            </p>
-          </CardContent>
-        </Card>
       </div>
     </main>
   );

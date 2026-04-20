@@ -1,3 +1,4 @@
+import { db, instanceSettings } from "@workspace/db"
 import OpenAI from "openai"
 
 export interface TranslateBatchInput {
@@ -11,18 +12,29 @@ export interface TranslatedEntry {
   translation: string
 }
 
-const MODEL = "gpt-4o-mini"
+const DEFAULT_MODEL = "gpt-4o-mini"
 const MAX_KEYS_PER_REQUEST = 50
+
+async function resolveConfig(): Promise<{ apiKey: string; model: string }> {
+  const rows = await db.select().from(instanceSettings).limit(1)
+  const row = rows[0]
+  const apiKey = row?.openaiApiKey ?? process.env.OPENAI_API_KEY ?? ""
+  const model = row?.openaiModel ?? DEFAULT_MODEL
+  if (!apiKey) {
+    throw new Error(
+      "No OpenAI API key configured. Set one in the dashboard Settings or OPENAI_API_KEY env.",
+    )
+  }
+  return { apiKey, model }
+}
 
 export async function translateBatch(
   input: TranslateBatchInput,
 ): Promise<TranslatedEntry[]> {
   if (input.entries.length === 0) return []
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY is not set")
-  }
 
-  const client = new OpenAI()
+  const { apiKey, model } = await resolveConfig()
+  const client = new OpenAI({ apiKey })
   const results: TranslatedEntry[] = []
 
   for (let i = 0; i < input.entries.length; i += MAX_KEYS_PER_REQUEST) {
@@ -30,7 +42,7 @@ export async function translateBatch(
     const payload = Object.fromEntries(slice.map((e) => [e.key, e.source]))
 
     const response = await client.chat.completions.create({
-      model: MODEL,
+      model,
       response_format: { type: "json_object" },
       messages: [
         {

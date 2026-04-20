@@ -6,27 +6,25 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: @lingui/cli\n"
 "Language: en\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
 
-#: app/page.tsx:38
-msgid "Coming soon"
-msgstr "Coming soon"
-
-#: app/page.tsx:23
+#: app/page.tsx:17
 msgid "Connect a git repository. New source-language messages are translated to every target language via AI and opened as a pull request."
 msgstr "Connect a git repository. New source-language messages are translated to every target language via AI and opened as a pull request."
 
-#: app/page.tsx:41
-msgid "Connect a repository and configure target languages."
-msgstr "Connect a repository and configure target languages."
-
-#: app/page.tsx:30
+#: app/page.tsx:24
 msgid "Get started"
 msgstr "Get started"
 
-#: app/page.tsx:20
+#: app/page.tsx:14
 msgid "ICU Flow — automated translations for your app messages"
 msgstr "ICU Flow — automated translations for your app messages"
 
-#: app/page.tsx:46
-msgid "This is a sample landing page. The real onboarding flow lands in a later step."
-msgstr "This is a sample landing page. The real onboarding flow lands in a later step."
+#: app/page.tsx:27
+msgid "Sign in"
+msgstr "Sign in"
