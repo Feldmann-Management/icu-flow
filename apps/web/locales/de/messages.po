@@ -1,0 +1,26 @@
+msgid ""
+msgstr ""
+"Language: de\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"MIME-Version: 1.0\n"
+
+#: app/page.tsx:17
+msgid ""
+"Connect a git repository. New source-language messages are translated to "
+"every target language via AI and opened as a pull request."
+msgstr ""
+"Verbinden Sie ein Git-Repository. Neue Nachrichten in der Quellsprache "
+"werden über KI in jede Zielsprache übersetzt und als Pull Request geöffnet."
+
+#: app/page.tsx:24
+msgid "Get started"
+msgstr "Loslegen"
+
+#: app/page.tsx:14
+msgid "ICU Flow — automated translations for your app messages"
+msgstr "ICU Flow — automatisierte Übersetzungen für Ihre App-Nachrichten"
+
+#: app/page.tsx:27
+msgid "Sign in"
+msgstr "Anmelden"
