@@ -1,0 +1,78 @@
+# Production topology for Coolify deploys.
+#
+# Coolify magic environment variables fill these in on first deploy:
+#   SERVICE_USER_POSTGRES        — generated Postgres user
+#   SERVICE_PASSWORD_POSTGRES    — generated Postgres password
+#   SERVICE_BASE64_64_BETTERAUTH — generated 64-byte base64 for Better-Auth
+#   SERVICE_FQDN_WEB             — the domain attached to the web service
+#
+# All of the above persist across redeploys in Coolify's secret store.
+# See README for the dev-time compose (docker-compose.yml, postgres only).
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: icuflow
+      POSTGRES_USER: ${SERVICE_USER_POSTGRES}
+      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_POSTGRES}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    build:
+      context: .
+      dockerfile: packages/db/Dockerfile
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/icuflow
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      SERVICE_FQDN_WEB: /
+      APP_URL: ${SERVICE_FQDN_WEB}
+      DATABASE_URL: postgres://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/icuflow
+      BETTER_AUTH_SECRET: ${SERVICE_BASE64_64_BETTERAUTH}
+    expose:
+      - "3000"
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgres://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/icuflow
+      WORK_DIR: /var/lib/icu-flow/work
+    volumes:
+      - worker-work:/var/lib/icu-flow/work
+    stop_grace_period: 30s
+
+volumes:
+  postgres-data:
+  worker-work:

@@ -1,30 +1,27 @@
 FROM node:20-alpine AS base
+RUN apk update && apk add --no-cache libc6-compat git tini
 RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
-RUN apk add --no-cache git tini
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+WORKDIR /app
 
-FROM base AS deps
-WORKDIR /repo
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-COPY apps/worker/package.json ./apps/worker/package.json
-COPY packages/queue/package.json ./packages/queue/package.json
-COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
-COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
-RUN pnpm install --frozen-lockfile --filter worker...
+FROM base AS pruner
+RUN pnpm add -g turbo@^2
+COPY . .
+RUN turbo prune worker --docker
+
+FROM base AS builder
+COPY --from=pruner /app/out/json/ ./
+RUN pnpm install --frozen-lockfile
+COPY --from=pruner /app/out/full/ ./
 
 FROM base AS runner
-WORKDIR /repo
 ENV NODE_ENV=production
-COPY --from=deps /repo/node_modules ./node_modules
-COPY --from=deps /repo/apps/worker/node_modules ./apps/worker/node_modules
-COPY --from=deps /repo/packages/queue/node_modules ./packages/queue/node_modules
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/worker ./apps/worker
-COPY packages/queue ./packages/queue
-COPY packages/typescript-config ./packages/typescript-config
-
-RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 worker \
+RUN addgroup --system --gid 1001 nodejs \
+  && adduser --system --uid 1001 worker \
   && mkdir -p /var/lib/icu-flow/work \
-  && chown -R worker:nodejs /var/lib/icu-flow /repo
+  && chown -R worker:nodejs /var/lib/icu-flow
+COPY --from=builder --chown=worker:nodejs /app/ ./
 USER worker
 ENV WORK_DIR=/var/lib/icu-flow/work
 VOLUME ["/var/lib/icu-flow/work"]
