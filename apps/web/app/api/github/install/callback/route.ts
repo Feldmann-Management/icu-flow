@@ -5,6 +5,8 @@ import { appUrl } from "@/lib/app-url"
 import { auth } from "@/lib/auth"
 import { syncFromGitHub } from "@/domains/installations/installations.service"
 
+export const dynamic = "force-dynamic"
+
 export async function GET(request: Request): Promise<Response> {
   const base = appUrl()
   const session = await auth.api.getSession({ headers: await headers() })
