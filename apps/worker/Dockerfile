@@ -26,5 +26,7 @@ USER worker
 ENV WORK_DIR=/var/lib/icu-flow/work
 VOLUME ["/var/lib/icu-flow/work"]
 
+# Run from the worker package so `tsx` resolves in its local node_modules.
+WORKDIR /app/apps/worker
 ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["node", "--import", "tsx", "apps/worker/src/index.ts"]
+CMD ["node", "--import", "tsx", "src/index.ts"]
