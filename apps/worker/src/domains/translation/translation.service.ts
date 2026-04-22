@@ -112,10 +112,15 @@ export async function runTranslation(
       }
     }
 
-    const commitResult = await commitAndForcePushTranslations(
+    const commitResult = await commitAndForcePushTranslations({
       git,
-      `chore(i18n): translate ${keysTranslated} messages into ${[...localesTouched].join(", ") || "none"}`,
-    )
+      workdir,
+      installationId: payload.installationId,
+      owner: repoRow.owner,
+      name: repoRow.name,
+      defaultBranch: repoRow.defaultBranch,
+      message: `chore(i18n): translate ${keysTranslated} messages into ${[...localesTouched].join(", ") || "none"}`,
+    })
 
     if (!commitResult) {
       await translationRunRepo.markSucceeded({
