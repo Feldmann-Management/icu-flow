@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select"
 
-const MODELS = ["gpt-4o-mini", "gpt-4o", "gpt-4.1"] as const
+const MODELS = ["gpt-5-nano", "gpt-5-mini", "gpt-5"] as const
 
 const schema = z.object({
   openaiApiKey: z.string(),
@@ -209,8 +209,9 @@ export function SettingsForm({ initial }: SettingsFormProps) {
                     </SelectContent>
                   </Select>
                   <FieldDescription>
-                    <code>gpt-4o-mini</code> is cheapest; <code>gpt-4o</code>{" "}
-                    and <code>gpt-4.1</code> give better prose quality.
+                    <code>gpt-5-nano</code> is cheapest; <code>gpt-5-mini</code>{" "}
+                    is the recommended default; <code>gpt-5</code> maximizes
+                    prose quality at higher cost.
                   </FieldDescription>
                 </Field>
               )}

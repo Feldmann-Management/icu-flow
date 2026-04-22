@@ -18,7 +18,7 @@ export interface TranslatedEntry {
   translation: string
 }
 
-const DEFAULT_MODEL = "gpt-4o-mini"
+const DEFAULT_MODEL = "gpt-5-mini"
 const MAX_KEYS_PER_REQUEST = 50
 
 export async function resolveLlmConfig(): Promise<LlmConfig> {

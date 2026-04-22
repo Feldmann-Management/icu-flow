@@ -24,7 +24,7 @@ export async function upsert(patch: InstanceSettingsPatch): Promise<void> {
     .values({
       id: "default",
       openaiApiKey: patch.openaiApiKey ?? null,
-      openaiModel: patch.openaiModel ?? "gpt-4o-mini",
+      openaiModel: patch.openaiModel ?? "gpt-5-mini",
     })
     .onConflictDoUpdate({
       target: instanceSettings.id,

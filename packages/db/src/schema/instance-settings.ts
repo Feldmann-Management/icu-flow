@@ -7,7 +7,7 @@ import { pgTable, text, timestamp } from "drizzle-orm/pg-core"
 export const instanceSettings = pgTable("instance_settings", {
   id: text("id").primaryKey().default("default"),
   openaiApiKey: text("openai_api_key"),
-  openaiModel: text("openai_model").notNull().default("gpt-4o-mini"),
+  openaiModel: text("openai_model").notNull().default("gpt-5-mini"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 })

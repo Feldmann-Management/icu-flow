@@ -1,8 +1,8 @@
 import * as repo from "./settings.repository"
 
-export const OPENAI_MODELS = ["gpt-4o-mini", "gpt-4o", "gpt-4.1"] as const
+export const OPENAI_MODELS = ["gpt-5-nano", "gpt-5-mini", "gpt-5"] as const
 export type OpenAIModel = (typeof OPENAI_MODELS)[number]
-export const DEFAULT_MODEL: OpenAIModel = "gpt-4o-mini"
+export const DEFAULT_MODEL: OpenAIModel = "gpt-5-mini"
 
 export interface SettingsView {
   openaiApiKey: string
@@ -59,7 +59,7 @@ export async function testKey(providedKey?: string): Promise<TestKeyResult> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: "gpt-5-nano",
       messages: [{ role: "user", content: "hello" }],
       max_tokens: 1,
     }),
