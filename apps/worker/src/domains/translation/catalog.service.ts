@@ -22,7 +22,11 @@ export async function writeCatalog(
   catalog: Catalog,
 ): Promise<void> {
   await fs.mkdir(path.dirname(filePath), { recursive: true })
-  const out = po.compile(catalog)
+  // foldLength: 0 disables gettext's classic 76-char line wrapping. Modern JS
+  // i18n toolchains (Lingui, formatjs, i18next-parser) emit unwrapped .po, so
+  // wrapping would cause their `extract && git diff --exit-code` CI check to
+  // fail on lines we didn't semantically touch.
+  const out = po.compile(catalog, { foldLength: 0 })
   await fs.writeFile(filePath, out)
 }
 
