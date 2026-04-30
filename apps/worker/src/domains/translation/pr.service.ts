@@ -59,5 +59,19 @@ export async function openOrUpdatePullRequest(
     base: params.defaultBranch,
     body: params.body,
   })
+
+  try {
+    await octokit.graphql(
+      `mutation($id: ID!) {
+         enablePullRequestAutoMerge(input: { pullRequestId: $id, mergeMethod: SQUASH }) {
+           pullRequest { number }
+         }
+       }`,
+      { id: created.data.node_id },
+    )
+  } catch {
+    // Auto-merge may be disabled on the repo or unavailable; PR creation still succeeds.
+  }
+
   return { number: created.data.number, headSha, action: "opened" }
 }
