@@ -6,12 +6,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 
 #: app/page.tsx:17
-msgid ""
-"Connect a git repository. New source-language messages are translated to "
-"every target language via AI and opened as a pull request."
-msgstr ""
-"Verbinden Sie ein Git-Repository. Neue Nachrichten in der Quellsprache "
-"werden über KI in jede Zielsprache übersetzt und als Pull Request geöffnet."
+msgid "Connect a git repository. New source-language messages are translated to every target language via AI and opened as a pull request."
+msgstr "Verbinde ein Git-Repository. Neue Nachrichten in der Ausgangssprache werden per KI in alle Zielsprachen übersetzt und als Pull Request eröffnet."
 
 #: app/page.tsx:24
 msgid "Get started"
@@ -19,7 +15,7 @@ msgstr "Loslegen"
 
 #: app/page.tsx:14
 msgid "ICU Flow — automated translations for your app messages"
-msgstr "ICU Flow — automatisierte Übersetzungen für Ihre App-Nachrichten"
+msgstr "ICU Flow — automatisierte Übersetzungen für deine App-Nachrichten"
 
 #: app/page.tsx:27
 msgid "Sign in"
