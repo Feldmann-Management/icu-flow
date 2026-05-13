@@ -2,15 +2,15 @@ import fs from "node:fs/promises"
 import path from "node:path"
 
 import { parse as parseYaml } from "yaml"
-import { z } from "zod"
 
-export const configSchema = z.object({
-  source: z.string().min(1),
-  targets: z.array(z.string().min(1)).min(1),
-  messages: z.array(z.string().min(1)).min(1),
-})
+import {
+  configSchema,
+  ICU_FLOW_CONFIG_PATH,
+  type IcuFlowConfig,
+} from "@workspace/translation-config"
 
-export type IcuFlowConfig = z.infer<typeof configSchema>
+export { configSchema, resolveLocalePath } from "@workspace/translation-config"
+export type { IcuFlowConfig } from "@workspace/translation-config"
 
 export class ConfigMissingError extends Error {
   constructor() {
@@ -20,7 +20,7 @@ export class ConfigMissingError extends Error {
 }
 
 export async function readConfig(repoDir: string): Promise<IcuFlowConfig> {
-  const configPath = path.join(repoDir, "icu-flow.yml")
+  const configPath = path.join(repoDir, ICU_FLOW_CONFIG_PATH)
   let raw: string
   try {
     raw = await fs.readFile(configPath, "utf8")
@@ -32,8 +32,4 @@ export async function readConfig(repoDir: string): Promise<IcuFlowConfig> {
   }
   const parsed = parseYaml(raw) as unknown
   return configSchema.parse(parsed)
-}
-
-export function resolveLocalePath(template: string, locale: string): string {
-  return template.replace(/\{locale\}/g, locale)
 }

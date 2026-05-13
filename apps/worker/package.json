@@ -13,6 +13,7 @@
     "@workspace/db": "workspace:^",
     "@workspace/github": "workspace:^",
     "@workspace/queue": "workspace:*",
+    "@workspace/translation-config": "workspace:*",
     "dotenv": "^17.4.2",
     "gettext-parser": "^9.0.2",
     "openai": "^6.34.0",

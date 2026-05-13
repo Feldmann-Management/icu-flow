@@ -17,6 +17,7 @@ import {
 import { resolveLlmConfig, translateBatch } from "./llm.service"
 import { openOrUpdatePullRequest } from "./pr.service"
 import * as repoRepo from "./repo.repository"
+import * as rulesRepo from "./repo-translation-rules.repository"
 import * as translationPrRepo from "./translation-pr.repository"
 import * as translationRunRepo from "./translation-run.repository"
 import { createWorkdir, removeWorkdir } from "./workdir.service"
@@ -42,6 +43,7 @@ export async function runTranslation(
   })
 
   const llmConfig = await resolveLlmConfig()
+  const rules = await rulesRepo.findByRepoId(repoRow.id)
   const workdir = await createWorkdir(jobId)
   let success = false
   try {
@@ -70,6 +72,7 @@ export async function runTranslation(
         continue
       }
 
+      const enforceSet = new Set(payload.enforceLocales ?? [])
       for (const targetLocale of config.targets) {
         if (targetLocale === config.source) continue
         const targetPath = path.join(
@@ -77,11 +80,19 @@ export async function runTranslation(
           resolveLocalePath(template, targetLocale),
         )
         const existing = await readCatalog(targetPath)
-        const { catalog, missing } = buildTargetFromSource(
+        const { catalog, missing: missingFromSource } = buildTargetFromSource(
           sourceCatalog,
           existing,
           targetLocale,
         )
+        const enforce = enforceSet.has(targetLocale)
+        const missing = enforce
+          ? Object.entries(sourceCatalog.translations).flatMap(([context, group]) =>
+              Object.keys(group)
+                .filter((msgid) => !(context === "" && msgid === ""))
+                .map((msgid) => ({ context, msgid, source: msgid })),
+            )
+          : missingFromSource
 
         if (missing.length === 0) {
           if (!existing) {
@@ -98,6 +109,8 @@ export async function runTranslation(
             key: `${m.context}\u0000${m.msgid}`,
             source: m.source,
           })),
+          generalRules: rules.generalRules,
+          targetLocaleRules: rules.languageRules[targetLocale],
         })
 
         const applied = translations.map((t) => {

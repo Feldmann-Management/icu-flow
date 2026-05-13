@@ -11,6 +11,8 @@ export interface TranslateBatchInput {
   sourceLocale: string
   targetLocale: string
   entries: { key: string; source: string }[]
+  generalRules?: string
+  targetLocaleRules?: string
 }
 
 export interface TranslatedEntry {
@@ -41,6 +43,7 @@ export async function translateBatch(
 
   const client = new OpenAI({ apiKey: config.apiKey })
   const results: TranslatedEntry[] = []
+  const systemPrompt = buildSystemPrompt(input)
 
   for (let i = 0; i < input.entries.length; i += MAX_KEYS_PER_REQUEST) {
     const slice = input.entries.slice(i, i + MAX_KEYS_PER_REQUEST)
@@ -50,18 +53,8 @@ export async function translateBatch(
       model: config.model,
       response_format: { type: "json_object" },
       messages: [
-        {
-          role: "system",
-          content: [
-            `You translate ICU MessageFormat strings from ${input.sourceLocale} to ${input.targetLocale}.`,
-            "Preserve all ICU placeholders like {name}, {count, plural, one {...} other {...}}, <Link>...</Link>, and any punctuation/capitalization pattern that belongs to the target language.",
-            "Return a single JSON object. Keys are the input keys; values are the translated strings. Do not add commentary.",
-          ].join(" "),
-        },
-        {
-          role: "user",
-          content: JSON.stringify(payload),
-        },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: JSON.stringify(payload) },
       ],
     })
 
@@ -79,4 +72,26 @@ export async function translateBatch(
   }
 
   return results
+}
+
+function buildSystemPrompt(input: TranslateBatchInput): string {
+  const parts: string[] = [
+    [
+      `You translate ICU MessageFormat strings from ${input.sourceLocale} to ${input.targetLocale}.`,
+      "Preserve all ICU placeholders like {name}, {count, plural, one {...} other {...}}, <Link>...</Link>, and any punctuation/capitalization pattern that belongs to the target language.",
+      "Return a single JSON object. Keys are the input keys; values are the translated strings. Do not add commentary.",
+    ].join(" "),
+  ]
+
+  const general = input.generalRules?.trim()
+  if (general) {
+    parts.push(`General style rules (apply to every translation):\n${general}`)
+  }
+
+  const locale = input.targetLocaleRules?.trim()
+  if (locale) {
+    parts.push(`Style rules for ${input.targetLocale}:\n${locale}`)
+  }
+
+  return parts.join("\n\n")
 }

@@ -17,6 +17,11 @@ export async function findByInstallationIds(
   return db.select().from(repo).where(inArray(repo.installationId, installationIds))
 }
 
+export async function findById(id: string): Promise<RepoRow | undefined> {
+  const [row] = await db.select().from(repo).where(eq(repo.id, id)).limit(1)
+  return row
+}
+
 export async function findByGithubRepoId(
   githubRepoId: number,
 ): Promise<RepoRow | undefined> {
