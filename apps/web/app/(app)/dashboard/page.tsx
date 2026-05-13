@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
@@ -72,9 +73,20 @@ export default async function DashboardPage() {
                   {inst.repos.length > 0 && (
                     <ul className="mt-2 flex flex-col gap-1 text-sm">
                       {inst.repos.map((r) => (
-                        <li key={r.id} className="text-muted-foreground">
-                          {r.owner}/{r.name}
-                          <span className="text-xs"> · {r.defaultBranch}</span>
+                        <li
+                          key={r.id}
+                          className="flex items-center justify-between text-muted-foreground"
+                        >
+                          <span>
+                            {r.owner}/{r.name}
+                            <span className="text-xs"> · {r.defaultBranch}</span>
+                          </span>
+                          <Link
+                            href={`/dashboard/repos/${r.id}/rules`}
+                            className="text-xs underline-offset-4 hover:underline"
+                          >
+                            Rules
+                          </Link>
                         </li>
                       ))}
                     </ul>

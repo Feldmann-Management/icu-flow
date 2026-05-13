@@ -52,17 +52,9 @@ export async function testKey(providedKey?: string): Promise<TestKeyResult> {
     return { ok: false, error: "no key provided or saved" }
   }
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-5-nano",
-      messages: [{ role: "user", content: "hello" }],
-      max_tokens: 1,
-    }),
+  const response = await fetch("https://api.openai.com/v1/models", {
+    method: "GET",
+    headers: { Authorization: `Bearer ${key}` },
   })
 
   if (!response.ok) {

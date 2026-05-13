@@ -6,6 +6,7 @@ export const jobSchemas = {
     repoFullName: z.string().min(1),
     sha: z.string().min(1),
     reason: z.enum(["push", "manual", "retry"]),
+    enforceLocales: z.array(z.string().min(1)).optional(),
   }),
 } as const;
 

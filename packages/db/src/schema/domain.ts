@@ -3,6 +3,7 @@ import {
   bigint,
   boolean,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -57,6 +58,18 @@ export const repo = pgTable(
   },
   (table) => [uniqueIndex("repo_owner_name_idx").on(table.owner, table.name)],
 );
+
+export const repoTranslationRules = pgTable("repo_translation_rules", {
+  repoId: uuid("repo_id")
+    .primaryKey()
+    .references(() => repo.id, { onDelete: "cascade" }),
+  generalRules: text("general_rules").notNull().default(""),
+  languageRules: jsonb("language_rules")
+    .$type<Record<string, string>>()
+    .notNull()
+    .default(sql`'{}'::jsonb`),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 export const translationPr = pgTable(
   "translation_pr",
